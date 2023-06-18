@@ -1,7 +1,4 @@
-use core::panic;
-use std::{eprintln, error::Error, println};
-
-use sqlx::{migrate::MigrateDatabase, FromRow, Sqlite, SqlitePool, sqlite::SqliteQueryResult};
+use sqlx::{migrate::MigrateDatabase, sqlite::SqliteQueryResult, FromRow, Sqlite, SqlitePool};
 
 const URL: &str = "sqlite::memory:";
 
@@ -18,10 +15,16 @@ struct Episode {
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()>{
-    Sqlite::create_database(URL).await?;
+async fn main() -> anyhow::Result<()> {
+    let db = setup_database(URL).await?;
 
-    let db = SqlitePool::connect(URL).await?;
+    Ok(())
+}
+
+async fn setup_database(url: &str) -> anyhow::Result<sqlx::Pool<Sqlite>> {
+    Sqlite::create_database(url).await?;
+
+    let db = SqlitePool::connect(url).await?;
 
     sqlx::query("CREATE TABLE shows (series_name TEXT PRIMARY KEY NOT NULL);")
         .execute(&db)
@@ -31,33 +34,69 @@ async fn main() -> anyhow::Result<()>{
         .execute(&db)
         .await?;
 
-    println!("{}",insert_show(&db, "UWU").await?);
-    println!("{}",insert_show(&db, "gUWU").await?);
-    println!("{}",insert_show(&db, "bUWU").await?);
-    let shows = select_show_like(&db, "%UWU").await?;
-    for show in shows {
-        println!("{}",show.series_name);
-    }
-
-    Ok(())
+    Ok(db)
 }
 
-async fn insert_show(db: &SqlitePool, series_name: &str) -> anyhow::Result<i64> {
-    Ok(sqlx::query("INSERT INTO shows(series_name) VALUES (?);").bind(series_name).execute(&mut db.acquire().await.unwrap()).await?.last_insert_rowid())
+async fn insert_show(db: &SqlitePool, series_name: &str) -> anyhow::Result<SqliteQueryResult> {
+    Ok(sqlx::query("INSERT INTO shows(series_name) VALUES (?);")
+        .bind(series_name)
+        .execute(&mut db.acquire().await?)
+        .await?)
 }
 
 async fn select_show(db: &SqlitePool, show: &str) -> anyhow::Result<Vec<Show>> {
-    Ok(sqlx::query_as::<_,Show>("SELECT * FROM shows WHERE series_name = ?;").bind(show).fetch_all(&mut db.acquire().await?).await?)
+    Ok(
+        sqlx::query_as::<_, Show>("SELECT series_name FROM shows WHERE series_name = ?;")
+            .bind(show)
+            .fetch_all(&mut db.acquire().await?)
+            .await?,
+    )
 }
 
 async fn select_show_like(db: &SqlitePool, show: &str) -> anyhow::Result<Vec<Show>> {
-    Ok(sqlx::query_as::<_,Show>("SELECT * FROM shows WHERE series_name LIKE ?;").bind(show).fetch_all(&mut db.acquire().await?).await?)
+    Ok(
+        sqlx::query_as::<_, Show>("SELECT series_name FROM shows WHERE series_name LIKE ?;")
+            .bind(show)
+            .fetch_all(&mut db.acquire().await?)
+            .await?,
+    )
 }
 
-async fn insert_episode(db: &SqlitePool, series_name: &str, season: u32, episode: u32) -> Result<(), Box<dyn Error + 'static>> {
-    match sqlx::query("INSERT INTO episodes (series_name, season, episode) VALUES (?,?,?)").bind(series_name).bind(season).bind(episode).execute(db).await {
-        Ok(_) => {Ok(())},
-        Err(error) => {eprintln!("{}", error); Err(Box::new(error))},
-    }
+async fn insert_episode(
+    db: &SqlitePool,
+    series_name: &str,
+    season: u32,
+    episode: u32,
+) -> anyhow::Result<SqliteQueryResult> {
+    Ok(
+        sqlx::query("INSERT INTO episodes (series_name, season, episode) VALUES (?,?,?)")
+            .bind(series_name)
+            .bind(season)
+            .bind(episode)
+            .execute(db)
+            .await?,
+    )
+}
 
+async fn select_all_episodes(db: &SqlitePool, series_name: &str) -> anyhow::Result<Vec<Episode>> {
+    Ok(sqlx::query_as::<_, Episode>(
+        "SELECT series_name, season, episode FROM episodes WHERE series_name = ? ORDER BY episode;",
+    )
+    .bind(series_name)
+    .fetch_all(db)
+    .await?)
+}
+
+async fn select_all_episodes_from_season(
+    db: &SqlitePool,
+    series_name: &str,
+    season: u32,
+) -> anyhow::Result<Vec<Episode>> {
+    Ok(sqlx::query_as::<_, Episode>(
+        "SELECT series_name, season, episode FROM episodes WHERE series_name = ? AND season = ? ORDER BY season, episode;",
+    )
+    .bind(series_name)
+    .bind(season)
+    .fetch_all(db)
+    .await?)
 }
