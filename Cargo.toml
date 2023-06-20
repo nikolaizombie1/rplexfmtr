@@ -8,5 +8,10 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.71"
 clap = { version = "4.3.4", features = ["derive"] }
+dirs = "5.0.1"
+lazy_static = "1.4.0"
+regex = "1.8.4"
+shellexpand = "3.1.0"
 sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "sqlite"]}
+text_io = "0.1.12"
 tokio = { version = "1.20.0", features = ["macros"]}
