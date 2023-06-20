@@ -10,6 +10,7 @@ anyhow = "1.0.71"
 clap = { version = "4.3.4", features = ["derive"] }
 dirs = "5.0.1"
 lazy_static = "1.4.0"
+natord = "1.0.9"
 regex = "1.8.4"
 shellexpand = "3.1.0"
 sqlx = { version = "0.6.2", features = ["runtime-tokio-native-tls", "sqlite"]}

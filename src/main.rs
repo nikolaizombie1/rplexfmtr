@@ -1,6 +1,7 @@
 mod database;
+use database::*;
 use clap::Parser;
-use lazy_static::{lazy_static, LazyStatic};
+use lazy_static::lazy_static;
 use regex::RegexSet;
 use std::{eprintln, fs::read_dir, io, path::PathBuf, println, process::exit};
 
@@ -18,7 +19,7 @@ struct Cli {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    let db = database::setup_database(database::URL).await?;
+    let db = setup_database(URL).await?;
     let args = Cli::parse();
     for path in &args.path {
         let mut name = std::ffi::OsStr::new("");
@@ -29,13 +30,16 @@ async fn main() -> anyhow::Result<()> {
             );
             let mut ans = String::new();
             io::stdin().read_line(&mut ans)?;
-            if !valid_name(&ans) {
+            ans = String::from(ans.trim_end());
+            if !valid_name(&ans) || show_in_database(&db, &ans).await? {
                 continue;
             } else {
                 name = std::ffi::OsStr::new(&ans);
+                insert_show(&db, name.to_str().unwrap()).await?;
                 break;
             }
         }
+        print_directory(path.to_path_buf())?;
     }
     Ok(())
 }
@@ -50,9 +54,18 @@ fn valid_paths(s: &str) -> anyhow::Result<PathBuf> {
 }
 
 fn print_directory(path: PathBuf) -> anyhow::Result<()> {
-    for file in read_dir(path)? {
-        println!("{}", file?.file_name().to_str().unwrap());
-    }
+    let mut files = read_dir(path)?
+        .collect::<Vec<_>>()
+        .into_iter()
+        .filter(|x| x.is_ok())
+        .flatten()
+        .collect::<Vec<_>>()
+        .into_iter()
+        .map(|x| x.file_name().to_str().unwrap().to_owned())
+        .collect::<Vec<_>>();
+    files.sort_by(|a, b| natord::compare(&a.to_ascii_lowercase(), &b.to_ascii_lowercase()));
+    files.into_iter().for_each(|f| println!("{f}"));
+
     Ok(())
 }
 

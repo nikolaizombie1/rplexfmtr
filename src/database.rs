@@ -46,6 +46,15 @@ pub async fn select_show(db: &SqlitePool, show: &str) -> anyhow::Result<Vec<Show
     )
 }
 
+pub async fn show_in_database(db: &SqlitePool, show: &str) -> anyhow::Result<bool> {
+    let result = select_show(db, show).await?;
+    if result.len() > 0 {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
+
 pub async fn select_show_like(db: &SqlitePool, show: &str) -> anyhow::Result<Vec<Show>> {
     Ok(
         sqlx::query_as::<_, Show>("SELECT series_name FROM shows WHERE series_name LIKE ?;")
