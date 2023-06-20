@@ -1,6 +1,6 @@
 mod database;
-use database::*;
 use clap::Parser;
+use database::*;
 use lazy_static::lazy_static;
 use regex::RegexSet;
 use std::{eprintln, fs::read_dir, io, path::PathBuf, println, process::exit};
@@ -72,7 +72,7 @@ fn print_directory(path: PathBuf) -> anyhow::Result<()> {
 fn valid_name(name: &str) -> bool {
     lazy_static! {
         static ref REGEXES: RegexSet = RegexSet::new(&[
-            r#"([<>:"/\|?*\\])"#,
+            r#"[<>:"/\|?*\\]"#,
             r#"COM[0-9]"#,
             r#"LPT[0-9]"#,
             r#"NUL"#,
