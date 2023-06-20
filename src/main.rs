@@ -54,19 +54,24 @@ fn valid_paths(s: &str) -> anyhow::Result<PathBuf> {
 }
 
 fn print_directory(path: PathBuf) -> anyhow::Result<()> {
-    let mut files = read_dir(path)?
+    let mut files = get_file_names(path)?;
+    files.sort_by(|a, b| natord::compare(&a.to_ascii_lowercase(), &b.to_ascii_lowercase()));
+    files.into_iter().for_each(|f| println!("{f}"));
+
+    Ok(())
+}
+
+fn get_file_names(path: PathBuf) -> anyhow::Result<Vec<String>> {
+    Ok(read_dir(path)?
         .collect::<Vec<_>>()
         .into_iter()
         .filter(|x| x.is_ok())
         .flatten()
         .collect::<Vec<_>>()
         .into_iter()
+        .filter(|x| x.file_type().unwrap().is_file())
         .map(|x| x.file_name().to_str().unwrap().to_owned())
-        .collect::<Vec<_>>();
-    files.sort_by(|a, b| natord::compare(&a.to_ascii_lowercase(), &b.to_ascii_lowercase()));
-    files.into_iter().for_each(|f| println!("{f}"));
-
-    Ok(())
+        .collect::<Vec<_>>())
 }
 
 fn valid_name(name: &str) -> bool {
