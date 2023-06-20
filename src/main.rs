@@ -1,15 +1,8 @@
 mod database;
 use clap::Parser;
-use std::{
-    eprintln,
-    fs::read_dir,
-    io,
-    path:: PathBuf,
-    println,
-    process::exit,
-};
+use lazy_static::{lazy_static, LazyStatic};
 use regex::RegexSet;
-use lazy_static::{LazyStatic, lazy_static};
+use std::{eprintln, fs::read_dir, io, path::PathBuf, println, process::exit};
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -38,8 +31,7 @@ async fn main() -> anyhow::Result<()> {
             io::stdin().read_line(&mut ans)?;
             if !valid_name(&ans) {
                 continue;
-            }
-            else {
+            } else {
                 name = std::ffi::OsStr::new(&ans);
                 break;
             }
@@ -66,12 +58,24 @@ fn print_directory(path: PathBuf) -> anyhow::Result<()> {
 
 fn valid_name(name: &str) -> bool {
     lazy_static! {
-        static ref REGEXES: RegexSet = RegexSet::new(&[r#"([<>:"/\|?*\\])"#, r#"COM[0-9]"#, r#"NUL"#, r#"PRN"#, r#"AUX"# ]).unwrap();
+        static ref REGEXES: RegexSet = RegexSet::new(&[
+            r#"([<>:"/\|?*\\])"#,
+            r#"COM[0-9]"#,
+            r#"LPT[0-9]"#,
+            r#"NUL"#,
+            r#"PRN"#,
+            r#"AUX"#
+        ])
+        .unwrap();
     }
-    if name.len() == 0 || REGEXES.is_match(name) || name.contains("\0") || name.chars().nth(name.len() - 2).unwrap() == '.' || name.chars().nth(name.len() - 2).unwrap() == ' ' {
+    if name.len() == 0
+        || REGEXES.is_match(name)
+        || name.contains("\0")
+        || name.chars().nth(name.len() - 2).unwrap() == '.'
+        || name.chars().nth(name.len() - 2).unwrap() == ' '
+    {
         false
-    }
-    else {
+    } else {
         true
     }
 }
