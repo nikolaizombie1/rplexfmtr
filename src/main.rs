@@ -60,7 +60,19 @@ async fn main() -> anyhow::Result<()> {
                 selected_files.push(file);
             }
         }
-        preview_changes(&name, get_file_names(selected_files)?)?;
+        let mut season: usize;
+        loop {
+            println!("What season do these files belong to?");
+            let mut ans: String = String::new();
+            io::stdin().read_line(&mut ans)?;
+            ans = String::from(ans.trim_end());
+            break match ans.parse::<usize>() {
+                Ok(x) => {season = x;},
+                Err(_) => {continue;}
+            }
+        }
+        println!("Here is a preview of the changes.");
+        preview_changes(&name, get_file_names(selected_files)?, season)?;
     }
     Ok(())
 }
@@ -187,10 +199,10 @@ fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<usize>
     Ok(file_numbers)
 }
 
-fn preview_changes(name: &str, files: Vec<String>) -> anyhow::Result<()> {
+fn preview_changes(name: &str, files: Vec<String>, season: usize) -> anyhow::Result<()> {
     for (index, file) in files.into_iter().enumerate() {
         let extention = file.split('.').last().unwrap();
-        println!("{}. {} ----> {}.{}", index, file, name, extention);
+        println!("{index}. {name} ----> {file} S{season}E{index}.{extention}");
     }
     Ok(())
 }
