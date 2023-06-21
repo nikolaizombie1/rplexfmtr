@@ -2,8 +2,15 @@ mod database;
 use clap::Parser;
 use database::*;
 use lazy_static::lazy_static;
-use regex::RegexSet;
-use std::{eprintln, fs::read_dir, io, path::PathBuf, println, process::exit};
+use regex::{Regex, RegexSet};
+use std::{
+    eprintln,
+    fs::{read_dir, DirEntry},
+    io,
+    path::PathBuf,
+    println,
+    process::exit,
+};
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -39,7 +46,13 @@ async fn main() -> anyhow::Result<()> {
                 break;
             }
         }
+        let files = get_files(path.to_owned())?;
         print_directory(path.to_path_buf())?;
+        println!("Which files would you like to choose?");
+        let mut selection: String = String::new();
+        io::stdin().read_line(&mut selection)?;
+        selection = String::from(selection.trim_end());
+        let files = parse_range(files.len(), selection)?;
     }
     Ok(())
 }
@@ -53,15 +66,7 @@ fn valid_paths(s: &str) -> anyhow::Result<PathBuf> {
     Ok(path)
 }
 
-fn print_directory(path: PathBuf) -> anyhow::Result<()> {
-    let mut files = get_file_names(path)?;
-    files.sort_by(|a, b| natord::compare(&a.to_ascii_lowercase(), &b.to_ascii_lowercase()));
-    files.into_iter().for_each(|f| println!("{f}"));
-
-    Ok(())
-}
-
-fn get_file_names(path: PathBuf) -> anyhow::Result<Vec<String>> {
+fn get_files(path: PathBuf) -> anyhow::Result<Vec<DirEntry>> {
     Ok(read_dir(path)?
         .collect::<Vec<_>>()
         .into_iter()
@@ -70,6 +75,21 @@ fn get_file_names(path: PathBuf) -> anyhow::Result<Vec<String>> {
         .collect::<Vec<_>>()
         .into_iter()
         .filter(|x| x.file_type().unwrap().is_file())
+        .collect::<Vec<_>>())
+}
+
+fn print_directory(path: PathBuf) -> anyhow::Result<()> {
+    let mut files = get_file_names(get_files(path)?)?;
+    files.sort_by(|a, b| natord::compare(&a.to_ascii_lowercase(), &b.to_ascii_lowercase()));
+    for (num,file) in files.into_iter().enumerate() {
+        println!("{num}. {file}");
+    }
+    Ok(())
+}
+
+fn get_file_names(files: Vec<DirEntry>) -> anyhow::Result<Vec<String>> {
+    Ok(files
+        .into_iter()
         .map(|x| x.file_name().to_str().unwrap().to_owned())
         .collect::<Vec<_>>())
 }
@@ -96,4 +116,71 @@ fn valid_name(name: &str) -> bool {
     } else {
         true
     }
+}
+
+fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<usize>> {
+    lazy_static! {
+        static ref DUALENDEDRANGE: Regex = Regex::new(r#"^\d+-\d+$"#).unwrap();
+        static ref LEFTENDEDRANGE: Regex = Regex::new(r#"^\d+-$"#).unwrap();
+        static ref RIGHTENDEDRANGE: Regex = Regex::new(r#"^+-\d$"#).unwrap();
+        static ref CSV: Regex = Regex::new(r#"^(\d+,)+\d$"#).unwrap();
+        static ref SINGLE: Regex = Regex::new(r#"^\d$"#).unwrap();
+    }
+    let ranges = range
+        .split_ascii_whitespace()
+        .map(|x| x.to_owned())
+        .collect::<Vec<_>>();
+    let mut file_numbers: Vec<usize> = Vec::new();
+    for r in ranges {
+        if DUALENDEDRANGE.is_match(&r) {
+            let nums = r
+                .split('-')
+                .collect::<Vec<&str>>();
+            let left: usize = nums.get(0).unwrap().parse()?;
+            let right: usize = nums.get(1).unwrap().parse()?;
+            if left < ammount_files && right < ammount_files && left <= right {
+                for num in left..right {
+                    println!("{num}");
+                    file_numbers.push(num);
+                }
+            }
+        } else if LEFTENDEDRANGE.is_match(&r) {
+            let nums = r
+                .split('-')
+                .collect::<Vec<&str>>();
+            let left: usize = nums.get(0).unwrap().parse()?;
+            if left < ammount_files {
+                for num in left..ammount_files {
+                    println!("{num}");
+                    file_numbers.push(num);
+                }
+            }
+        } else if RIGHTENDEDRANGE.is_match(&r) {
+            let nums = r
+                .split('-')
+                .collect::<Vec<&str>>();
+            let right: usize = nums.get(1).unwrap().parse()?;
+            if right < ammount_files {
+                for num in 0..(right+1) {
+                    println!("{num}");
+                    file_numbers.push(num);
+                }
+            }
+        } else if CSV.is_match(&r) {
+            let nums = r.split(',').collect::<Vec<_>>().into_iter().map(|x| x.parse().unwrap()).collect::<Vec<usize>>();
+            for num in nums {
+                if num < ammount_files {
+                    println!("{num}");
+                    file_numbers.push(num);
+                }
+            }
+        } else if SINGLE.is_match(&r) {
+            let num: usize = r.parse().unwrap();
+            if num < ammount_files {
+                println!("{num}");
+                file_numbers.push(num);
+            }
+        }
+    }
+    Ok(file_numbers)
 }
