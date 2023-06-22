@@ -5,16 +5,17 @@ use sqlx::{migrate::MigrateDatabase, sqlite::SqliteQueryResult, FromRow, Sqlite,
 pub const URL: &str = "sqlite::memory:";
 
 #[derive(Clone, FromRow, Debug)]
-struct Show {
-    series_name: String,
+pub struct Show {
+    pub series_name: String,
 }
 
 #[derive(Clone, FromRow, Debug)]
-struct Episode {
+pub struct Episode {
     series_name: String,
     season: u32,
     episode: u32,
-    path: String,
+    pub old_path: String,
+    pub new_path: String,
 }
 
 pub async fn setup_database(url: &str) -> anyhow::Result<sqlx::Pool<Sqlite>> {
@@ -22,47 +23,17 @@ pub async fn setup_database(url: &str) -> anyhow::Result<sqlx::Pool<Sqlite>> {
 
     let db = SqlitePool::connect(url).await?;
 
-    sqlx::query("CREATE TABLE shows (series_name TEXT PRIMARY KEY NOT NULL);")
-        .execute(&db)
-        .await?;
-
-    sqlx::query("CREATE TABLE episodes (series_name TEXT, season INTEGER NOT NULL, episode INTEGER NOT NULL, path TEXT NOT NULL UNIQUE,FOREIGN KEY (series_name) REFERENCES shows (series_name) ON DELETE CASCADE ON UPDATE CASCADE);")
+    sqlx::query("CREATE TABLE episodes (series_name TEXT, season INTEGER NOT NULL, episode INTEGER NOT NULL, old_path TEXT NOT NULL UNIQUE, new_path TEXT NOT NULL UNIQUE);")
         .execute(&db)
         .await?;
 
     Ok(db)
 }
 
-pub async fn insert_show(db: &SqlitePool, series_name: &str) -> anyhow::Result<SqliteQueryResult> {
-    Ok(sqlx::query("INSERT INTO shows(series_name) VALUES (?);")
-        .bind(series_name)
-        .execute(&mut db.acquire().await?)
-        .await?)
-}
-
-pub async fn select_show(db: &SqlitePool, show: &str) -> anyhow::Result<Vec<Show>> {
+pub async fn select_all_shows(db: &SqlitePool) -> anyhow::Result<Vec<Show>> {
     Ok(
-        sqlx::query_as::<_, Show>("SELECT series_name FROM shows WHERE series_name = ?;")
-            .bind(show)
-            .fetch_all(&mut db.acquire().await?)
-            .await?,
-    )
-}
-
-pub async fn show_in_database(db: &SqlitePool, show: &str) -> anyhow::Result<bool> {
-    let result = select_show(db, show).await?;
-    if result.len() > 0 {
-        Ok(true)
-    } else {
-        Ok(false)
-    }
-}
-
-pub async fn select_show_like(db: &SqlitePool, show: &str) -> anyhow::Result<Vec<Show>> {
-    Ok(
-        sqlx::query_as::<_, Show>("SELECT series_name FROM shows WHERE series_name LIKE ?;")
-            .bind(show)
-            .fetch_all(&mut db.acquire().await?)
+        sqlx::query_as::<_, Show>("SELECT series_name FROM episodes;")
+            .fetch_all(db)
             .await?,
     )
 }
@@ -72,14 +43,16 @@ pub async fn insert_episode(
     series_name: &str,
     season: u32,
     episode: u32,
-    path: PathBuf,
+    old_path: PathBuf,
+    new_path: PathBuf,
 ) -> anyhow::Result<SqliteQueryResult> {
     Ok(
-        sqlx::query("INSERT INTO episodes (series_name, season, episode, path) VALUES (?,?,?)")
+        sqlx::query("INSERT INTO episodes (series_name, season, episode, old_path, new_path) VALUES (?,?,?,?,?)")
             .bind(series_name)
             .bind(season)
             .bind(episode)
-            .bind(path.as_os_str().to_str().unwrap())
+            .bind(old_path.as_os_str().to_str().unwrap())
+            .bind(new_path.as_os_str().to_str().unwrap())
             .execute(db)
             .await?,
     )
@@ -90,23 +63,9 @@ pub async fn select_all_episodes(
     series_name: &str,
 ) -> anyhow::Result<Vec<Episode>> {
     Ok(sqlx::query_as::<_, Episode>(
-        "SELECT series_name, season, episode, path FROM episodes WHERE series_name = ? ORDER BY episode;",
+        "SELECT series_name, season, episode, old_path, new_path FROM episodes WHERE series_name = ? ORDER BY episode;",
     )
     .bind(series_name)
-    .fetch_all(db)
-    .await?)
-}
-
-pub async fn select_all_episodes_from_season(
-    db: &SqlitePool,
-    series_name: &str,
-    season: u32,
-) -> anyhow::Result<Vec<Episode>> {
-    Ok(sqlx::query_as::<_, Episode>(
-        "SELECT series_name, season, episode, path FROM episodes WHERE series_name = ? AND season = ? ORDER BY season, episode;",
-    )
-    .bind(series_name)
-    .bind(season)
     .fetch_all(db)
     .await?)
 }
