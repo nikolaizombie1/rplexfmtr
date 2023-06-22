@@ -1,7 +1,6 @@
 mod database;
 use clap::Parser;
 use database::*;
-use fs_extra::dir::CopyOptions;
 use lazy_static::lazy_static;
 use regex::{Regex, RegexSet};
 use std::{
@@ -121,7 +120,9 @@ async fn main() -> anyhow::Result<()> {
             for show in select_all_shows(&db).await? {
                 println!("{} {{", show.series_name);
                 let mut episodes = select_all_episodes(&db, &show.series_name).await?;
-                episodes.sort_by(|a,b| natord::compare(&a.old_path.to_lowercase(), &b.old_path.to_ascii_uppercase()));
+                episodes.sort_by(|a, b| {
+                    natord::compare(&a.old_path.to_lowercase(), &b.old_path.to_ascii_uppercase())
+                });
                 for (index, episode) in episodes.into_iter().enumerate() {
                     println!(
                         "  {}. {} ----> {}",
@@ -146,16 +147,16 @@ async fn main() -> anyhow::Result<()> {
 
     for show in select_all_shows(&db).await? {
         for episode in select_all_episodes(&db, &show.series_name).await? {
-            std::fs::create_dir_all(args.output_path.join(episode.series_name).join(String::from("Season ".to_owned() + &episode.season.to_string())))?;
+            std::fs::create_dir_all(args.output_path.join(episode.series_name).join(
+                String::from("Season ".to_owned() + &episode.season.to_string()),
+            ))?;
         }
     }
-
     for show in select_all_shows(&db).await? {
-        for episode in select_all_episodes(&db, &show.series_name)
-            .await?
-            .into_iter()
-        {
-            fs_extra::file::move_file(episode.old_path, episode.new_path,&fs_extra::file::CopyOptions::new())?;
+        let episodes = select_all_episodes(&db, &show.series_name).await?;
+        for (index, episode) in episodes.clone().into_iter().enumerate() {
+            std::fs::copy(episode.clone().old_path, episode.clone().new_path)?;
+            std::fs::remove_file(episode.clone().old_path)?;
         }
     }
 
