@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use sqlx::{migrate::MigrateDatabase, sqlite::SqliteQueryResult, FromRow, Sqlite, SqlitePool};
 
 pub const URL: &str = "sqlite::memory:";
@@ -12,6 +14,7 @@ struct Episode {
     series_name: String,
     season: u32,
     episode: u32,
+    path: String,
 }
 
 pub async fn setup_database(url: &str) -> anyhow::Result<sqlx::Pool<Sqlite>> {
@@ -23,7 +26,7 @@ pub async fn setup_database(url: &str) -> anyhow::Result<sqlx::Pool<Sqlite>> {
         .execute(&db)
         .await?;
 
-    sqlx::query("CREATE TABLE episodes (series_name TEXT, season INTEGER NOT NULL, episode INTEGER NOT NULL, FOREIGN KEY (series_name) REFERENCES shows (series_name) ON DELETE CASCADE ON UPDATE CASCADE);")
+    sqlx::query("CREATE TABLE episodes (series_name TEXT, season INTEGER NOT NULL, episode INTEGER NOT NULL, path TEXT NOT NULL UNIQUE,FOREIGN KEY (series_name) REFERENCES shows (series_name) ON DELETE CASCADE ON UPDATE CASCADE);")
         .execute(&db)
         .await?;
 
@@ -69,12 +72,14 @@ pub async fn insert_episode(
     series_name: &str,
     season: u32,
     episode: u32,
+    path: PathBuf,
 ) -> anyhow::Result<SqliteQueryResult> {
     Ok(
-        sqlx::query("INSERT INTO episodes (series_name, season, episode) VALUES (?,?,?)")
+        sqlx::query("INSERT INTO episodes (series_name, season, episode, path) VALUES (?,?,?)")
             .bind(series_name)
             .bind(season)
             .bind(episode)
+            .bind(path.as_os_str().to_str().unwrap())
             .execute(db)
             .await?,
     )
@@ -85,7 +90,7 @@ pub async fn select_all_episodes(
     series_name: &str,
 ) -> anyhow::Result<Vec<Episode>> {
     Ok(sqlx::query_as::<_, Episode>(
-        "SELECT series_name, season, episode FROM episodes WHERE series_name = ? ORDER BY episode;",
+        "SELECT series_name, season, episode, path FROM episodes WHERE series_name = ? ORDER BY episode;",
     )
     .bind(series_name)
     .fetch_all(db)
@@ -98,7 +103,7 @@ pub async fn select_all_episodes_from_season(
     season: u32,
 ) -> anyhow::Result<Vec<Episode>> {
     Ok(sqlx::query_as::<_, Episode>(
-        "SELECT series_name, season, episode FROM episodes WHERE series_name = ? AND season = ? ORDER BY season, episode;",
+        "SELECT series_name, season, episode, path FROM episodes WHERE series_name = ? AND season = ? ORDER BY season, episode;",
     )
     .bind(series_name)
     .bind(season)
