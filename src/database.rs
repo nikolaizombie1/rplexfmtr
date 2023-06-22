@@ -11,8 +11,8 @@ pub struct Show {
 
 #[derive(Clone, FromRow, Debug)]
 pub struct Episode {
-    series_name: String,
-    season: u32,
+    pub series_name: String,
+    pub season: u32,
     episode: u32,
     pub old_path: String,
     pub new_path: String,

@@ -1,6 +1,7 @@
 mod database;
 use clap::Parser;
 use database::*;
+use fs_extra::dir::CopyOptions;
 use lazy_static::lazy_static;
 use regex::{Regex, RegexSet};
 use std::{
@@ -79,27 +80,14 @@ async fn main() -> anyhow::Result<()> {
                 }
             };
         }
-        println!("Here is a preview changes of the files.");
-        preview_changes(&name, get_file_names(&selected_files)?, season)?;
-        loop {
-            println!("Would you like rename these files? [y/n]:");
-            let mut ans: String = String::new();
-            io::stdin().read_line(&mut ans)?;
-            ans = String::from(ans.trim_end());
-            break match ans == "y" {
-                true => {}
-                false => {
-                    exit(0);
-                }
-            };
-        }
+
         for (index, file) in selected_files.into_iter().enumerate() {
             insert_episode(
                 &db,
                 &name,
                 season,
                 (index as u32) + 1,
-                file.path(),
+                std::fs::canonicalize(file.path())?,
                 args.output_path
                     .to_owned()
                     .join(&name)
@@ -131,26 +119,45 @@ async fn main() -> anyhow::Result<()> {
     match ans.to_lowercase() == "y" {
         true => {
             for show in select_all_shows(&db).await? {
-                println!("{} {{",show.series_name);
-                for (index,episode) in select_all_episodes(&db, &show.series_name).await?.into_iter().enumerate() {
-                    println!("  {}. {} ----> {}",(index+1),episode.old_path,episode.new_path);
+                println!("{} {{", show.series_name);
+                let mut episodes = select_all_episodes(&db, &show.series_name).await?;
+                episodes.sort_by(|a,b| natord::compare(&a.old_path.to_lowercase(), &b.old_path.to_ascii_uppercase()));
+                for (index, episode) in episodes.into_iter().enumerate() {
+                    println!(
+                        "  {}. {} ----> {}",
+                        (index + 1),
+                        episode.old_path,
+                        episode.new_path
+                    );
                 }
                 println!("}}")
             }
-        },
-        false => {},
+        }
+        false => {}
     }
     println!("Would you like to execute these changes [y/n]:");
     let mut ans: String = String::new();
     io::stdin().read_line(&mut ans)?;
     ans = String::from(ans.trim_end());
     match ans.to_ascii_lowercase() == "y" {
-        true => {
-            
-        }
-        false => {exit(0)}
+        true => {}
+        false => exit(0),
     }
 
+    for show in select_all_shows(&db).await? {
+        for episode in select_all_episodes(&db, &show.series_name).await? {
+            std::fs::create_dir_all(args.output_path.join(episode.series_name).join(String::from("Season ".to_owned() + &episode.season.to_string())))?;
+        }
+    }
+
+    for show in select_all_shows(&db).await? {
+        for episode in select_all_episodes(&db, &show.series_name)
+            .await?
+            .into_iter()
+        {
+            fs_extra::file::move_file(episode.old_path, episode.new_path,&fs_extra::file::CopyOptions::new())?;
+        }
+    }
 
     Ok(())
 }
