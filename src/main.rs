@@ -29,7 +29,7 @@ async fn main() -> anyhow::Result<()> {
     let db = setup_database(URL).await?;
     let args = Cli::parse();
     for path in &args.path {
-        let mut name = String::new();
+        let name: String;
         loop {
             println!(
                 "What would you like the entries for {} to be tittled?: ",
@@ -38,11 +38,10 @@ async fn main() -> anyhow::Result<()> {
             let mut ans = String::new();
             io::stdin().read_line(&mut ans)?;
             ans = String::from(ans.trim_end());
-            if !valid_name(&ans) || show_in_database(&db, &ans).await? {
+            if !valid_name(&ans) {
                 continue;
             } else {
                 name = ans;
-                insert_show(&db, &name).await?;
                 break;
             }
         }
@@ -59,14 +58,19 @@ async fn main() -> anyhow::Result<()> {
                 selected_files.push(file);
             }
         }
-        selected_files.sort_by(|a, b| natord::compare(a.file_name().to_ascii_lowercase().to_str().unwrap(), b.file_name().to_ascii_lowercase().to_str().unwrap()) );
-        let mut season: usize;
+        selected_files.sort_by(|a, b| {
+            natord::compare(
+                a.file_name().to_ascii_lowercase().to_str().unwrap(),
+                b.file_name().to_ascii_lowercase().to_str().unwrap(),
+            )
+        });
+        let season: u32;
         loop {
             println!("What season do these files belong to?");
             let mut ans: String = String::new();
             io::stdin().read_line(&mut ans)?;
             ans = String::from(ans.trim_end());
-            break match ans.parse::<usize>() {
+            break match ans.parse::<u32>() {
                 Ok(x) => {
                     season = x;
                 }
@@ -76,7 +80,7 @@ async fn main() -> anyhow::Result<()> {
             };
         }
         println!("Here is a preview changes of the files.");
-        preview_changes(&name, get_file_names(selected_files)?, season)?;
+        preview_changes(&name, get_file_names(&selected_files)?, season)?;
         loop {
             println!("Would you like rename these files? [y/n]:");
             let mut ans: String = String::new();
@@ -89,7 +93,65 @@ async fn main() -> anyhow::Result<()> {
                 }
             };
         }
+        for (index, file) in selected_files.into_iter().enumerate() {
+            insert_episode(
+                &db,
+                &name,
+                season,
+                (index as u32) + 1,
+                file.path(),
+                args.output_path
+                    .to_owned()
+                    .join(&name)
+                    .join(String::from("Season ".to_owned() + &season.to_string()))
+                    .join(String::from(
+                        name.clone()
+                            + " S"
+                            + &season.to_string()
+                            + "E"
+                            + &(index + 1).to_string()
+                            + "."
+                            + file
+                                .file_name()
+                                .to_str()
+                                .unwrap()
+                                .split(".")
+                                .collect::<Vec<_>>()
+                                .last()
+                                .unwrap(),
+                    )),
+            )
+            .await?;
+        }
     }
+    println!("Would you like to preview the changes [y/n]:");
+    let mut ans: String = String::new();
+    io::stdin().read_line(&mut ans)?;
+    ans = String::from(ans.trim_end());
+    match ans.to_lowercase() == "y" {
+        true => {
+            for show in select_all_shows(&db).await? {
+                println!("{} {{",show.series_name);
+                for (index,episode) in select_all_episodes(&db, &show.series_name).await?.into_iter().enumerate() {
+                    println!("  {}. {} ----> {}",(index+1),episode.old_path,episode.new_path);
+                }
+                println!("}}")
+            }
+        },
+        false => {},
+    }
+    println!("Would you like to execute these changes [y/n]:");
+    let mut ans: String = String::new();
+    io::stdin().read_line(&mut ans)?;
+    ans = String::from(ans.trim_end());
+    match ans.to_ascii_lowercase() == "y" {
+        true => {
+            
+        }
+        false => {exit(0)}
+    }
+
+
     Ok(())
 }
 
@@ -112,12 +174,17 @@ fn get_files(path: PathBuf) -> anyhow::Result<Vec<DirEntry>> {
         .into_iter()
         .filter(|x| x.file_type().unwrap().is_file())
         .collect::<Vec<_>>();
-    files.sort_by(|a, b| natord::compare(a.file_name().to_ascii_lowercase().to_str().unwrap(), b.file_name().to_ascii_lowercase().to_str().unwrap()) );
+    files.sort_by(|a, b| {
+        natord::compare(
+            a.file_name().to_ascii_lowercase().to_str().unwrap(),
+            b.file_name().to_ascii_lowercase().to_str().unwrap(),
+        )
+    });
     Ok(files)
 }
 
 fn print_directory(path: PathBuf) -> anyhow::Result<()> {
-    let mut files = get_file_names(get_files(path).unwrap())?;
+    let mut files = get_file_names(&get_files(path).unwrap())?;
     files.sort_by(|a, b| natord::compare(&a.to_ascii_lowercase(), &b.to_ascii_lowercase()));
     for (num, file) in files.into_iter().enumerate() {
         println!("{num}. {file}");
@@ -125,7 +192,7 @@ fn print_directory(path: PathBuf) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn get_file_names(files: Vec<DirEntry>) -> anyhow::Result<Vec<String>> {
+fn get_file_names(files: &Vec<DirEntry>) -> anyhow::Result<Vec<String>> {
     Ok(files
         .into_iter()
         .map(|x| x.file_name().to_str().unwrap().to_owned())
@@ -223,10 +290,13 @@ fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<usize>
     Ok(file_numbers)
 }
 
-fn preview_changes(name: &str, files: Vec<String>, season: usize) -> anyhow::Result<()> {
+fn preview_changes(name: &str, files: Vec<String>, season: u32) -> anyhow::Result<()> {
     for (index, file) in files.into_iter().enumerate() {
         let extention = file.split('.').last().unwrap();
-        println!("{index}. {file} ----> {name} S{season}E{}.{extention}",(index+1));
+        println!(
+            "{index}. {file} ----> {name} S{season}E{}.{extention}",
+            (index + 1)
+        );
     }
     Ok(())
 }
