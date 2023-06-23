@@ -154,14 +154,8 @@ async fn main() -> anyhow::Result<()> {
     }
     for show in select_all_shows(&db).await? {
         for  episode in select_all_episodes(&db, &show.series_name).await?.into_iter() {
-            match std::fs::copy(episode.clone().old_path, episode.clone().new_path) {
-                Ok(_) => {}
-                Err(_) => {}
-            }
-            match std::fs::remove_file(episode.clone().old_path) {
-                Ok(_) => {}
-                Err(_) => {}
-            }
+            std::fs::copy(episode.clone().old_path, episode.clone().new_path)?;
+            std::fs::remove_file(episode.clone().old_path)?;
         }
     }
 
