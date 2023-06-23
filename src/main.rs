@@ -1,5 +1,6 @@
 mod database;
 use clap::Parser;
+use colored::*;
 use database::*;
 use lazy_static::lazy_static;
 use regex::{Regex, RegexSet};
@@ -33,7 +34,7 @@ async fn main() -> anyhow::Result<()> {
         loop {
             println!(
                 "What would you like the entries for {} to be tittled?: ",
-                path.to_str().unwrap()
+                path.to_str().unwrap().green()
             );
             let mut ans = String::new();
             io::stdin().read_line(&mut ans)?;
@@ -110,6 +111,7 @@ async fn main() -> anyhow::Result<()> {
             )
             .await?;
         }
+        clearscreen::clear()?;
     }
     println!("Would you like to preview the changes [y/n]:");
     let mut ans: String = String::new();
@@ -117,22 +119,7 @@ async fn main() -> anyhow::Result<()> {
     ans = String::from(ans.trim_end());
     match ans.to_lowercase() == "y" {
         true => {
-            for show in select_all_shows(&db).await? {
-                println!("{} {{", show.series_name);
-                let mut episodes = select_all_episodes(&db, &show.series_name).await?;
-                episodes.sort_by(|a, b| {
-                    natord::compare(&a.old_path.to_lowercase(), &b.old_path.to_ascii_uppercase())
-                });
-                for (index, episode) in episodes.into_iter().enumerate() {
-                    println!(
-                        "  {}. {} ----> {}",
-                        (index + 1),
-                        episode.old_path,
-                        episode.new_path
-                    );
-                }
-                println!("}}")
-            }
+            preview_changes(&db).await?;
         }
         false => {}
     }
@@ -141,24 +128,27 @@ async fn main() -> anyhow::Result<()> {
     io::stdin().read_line(&mut ans)?;
     ans = String::from(ans.trim_end());
     match ans.to_ascii_lowercase() == "y" {
-        true => {}
+        true => move_files(&db, &args).await?,
         false => exit(0),
     }
 
+    println!("Files renamed succesfully, Located at {}.",args.output_path.to_str().unwrap().green());
+    Ok(())
+}
+
+async fn move_files(db: &sqlx::SqlitePool, args: &Cli) -> anyhow::Result<()> {
     for show in select_all_shows(&db).await? {
-        for episode in select_all_episodes(&db, &show.series_name).await? {
-            std::fs::create_dir_all(args.output_path.join(episode.series_name).join(
+        for episode in select_all_episodes(&db, &show.series_name)
+            .await?
+            .into_iter()
+        {
+            std::fs::create_dir_all(args.output_path.join(episode.clone().series_name).join(
                 String::from("Season ".to_owned() + &episode.season.to_string()),
             ))?;
-        }
-    }
-    for show in select_all_shows(&db).await? {
-        for  episode in select_all_episodes(&db, &show.series_name).await?.into_iter() {
             std::fs::copy(episode.clone().old_path, episode.clone().new_path)?;
             std::fs::remove_file(episode.clone().old_path)?;
         }
     }
-
     Ok(())
 }
 
@@ -297,12 +287,45 @@ fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<usize>
     Ok(file_numbers)
 }
 
-fn preview_changes(name: &str, files: Vec<String>, season: u32) -> anyhow::Result<()> {
-    for (index, file) in files.into_iter().enumerate() {
-        let extention = file.split('.').last().unwrap();
+async fn preview_changes(db: &sqlx::SqlitePool) -> anyhow::Result<()> {
+    for show in select_all_shows(db).await? {
+        clearscreen::clear()?;
         println!(
-            "{index}. {file} ----> {name} S{season}E{}.{extention}",
-            (index + 1)
+            "{}",
+            tabled::Table::new(select_all_episodes(db, &show.series_name).await?)
+                .with(tabled::settings::Style::rounded())
+                .with(
+                    tabled::settings::style::BorderColor::default()
+                        .top(tabled::settings::Color::FG_GREEN)
+                        .bottom(tabled::settings::Color::FG_GREEN)
+                        .left(tabled::settings::Color::FG_GREEN)
+                        .right(tabled::settings::Color::FG_GREEN)
+                        .corner_top_left(tabled::settings::Color::FG_GREEN)
+                        .corner_top_right(tabled::settings::Color::FG_GREEN)
+                        .corner_bottom_left(tabled::settings::Color::FG_GREEN)
+                        .corner_bottom_right(tabled::settings::Color::FG_GREEN)
+                )
+                .with(
+                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(0))
+                        .with(tabled::settings::Format::content(|s| s.bright_red().to_string()))
+                )
+                .with(
+                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(1))
+                        .with(tabled::settings::Format::content(|s| s.yellow().to_string()))
+                )
+                .with(
+                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(2))
+                        .with(tabled::settings::Format::content(|s| s.cyan().to_string()))
+                )
+                .with(
+                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(3))
+                        .with(tabled::settings::Format::content(|s| s.bright_blue().to_string()))
+                )
+                .with(
+                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(4))
+                        .with(tabled::settings::Format::content(|s| s.bright_green().to_string()))
+                )
+                .to_string()
         );
     }
     Ok(())

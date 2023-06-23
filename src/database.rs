@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use tabled::Tabled;
 
 use sqlx::{migrate::MigrateDatabase, sqlite::SqliteQueryResult, FromRow, Sqlite, SqlitePool};
 
@@ -9,7 +10,7 @@ pub struct Show {
     pub series_name: String,
 }
 
-#[derive(Clone, FromRow, Debug)]
+#[derive(Clone, FromRow, Debug, Tabled)]
 pub struct Episode {
     pub series_name: String,
     pub season: u32,
