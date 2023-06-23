@@ -32,7 +32,7 @@ pub async fn setup_database(url: &str) -> anyhow::Result<sqlx::Pool<Sqlite>> {
 
 pub async fn select_all_shows(db: &SqlitePool) -> anyhow::Result<Vec<Show>> {
     Ok(
-        sqlx::query_as::<_, Show>("SELECT series_name FROM episodes;")
+        sqlx::query_as::<_, Show>("SELECT DISTINCT series_name FROM episodes;")
             .fetch_all(db)
             .await?,
     )

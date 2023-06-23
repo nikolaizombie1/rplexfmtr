@@ -153,10 +153,15 @@ async fn main() -> anyhow::Result<()> {
         }
     }
     for show in select_all_shows(&db).await? {
-        let episodes = select_all_episodes(&db, &show.series_name).await?;
-        for (index, episode) in episodes.clone().into_iter().enumerate() {
-            std::fs::copy(episode.clone().old_path, episode.clone().new_path)?;
-            std::fs::remove_file(episode.clone().old_path)?;
+        for  episode in select_all_episodes(&db, &show.series_name).await?.into_iter() {
+            match std::fs::copy(episode.clone().old_path, episode.clone().new_path) {
+                Ok(_) => {}
+                Err(_) => {}
+            }
+            match std::fs::remove_file(episode.clone().old_path) {
+                Ok(_) => {}
+                Err(_) => {}
+            }
         }
     }
 
