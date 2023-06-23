@@ -1,11 +1,9 @@
 use crate::*;
-use colored::*;
 use clap::Parser;
-use std::path::PathBuf;
-use std::fs::DirEntry;
+use colored::*;
 use std::fs::read_dir;
-
-
+use std::fs::DirEntry;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -34,7 +32,6 @@ pub async fn move_files(db: &sqlx::SqlitePool, args: &Cli) -> anyhow::Result<()>
     }
     Ok(())
 }
-
 
 pub fn get_files(path: PathBuf) -> anyhow::Result<Vec<DirEntry>> {
     let mut files = read_dir(path)?
@@ -71,47 +68,54 @@ pub fn get_file_names(files: &Vec<DirEntry>) -> anyhow::Result<Vec<String>> {
         .collect::<Vec<_>>())
 }
 
-
 pub async fn preview_changes(db: &sqlx::SqlitePool) -> anyhow::Result<()> {
+    clearscreen::clear()?;
+    let mut entries: Vec<Episode> = Vec::new();
     for show in select_all_shows(db).await? {
-        clearscreen::clear()?;
-        println!(
-            "{}",
-            tabled::Table::new(select_all_episodes(db, &show.series_name).await?)
-                .with(tabled::settings::Style::rounded())
-                .with(
-                    tabled::settings::style::BorderColor::default()
-                        .top(tabled::settings::Color::FG_GREEN)
-                        .bottom(tabled::settings::Color::FG_GREEN)
-                        .left(tabled::settings::Color::FG_GREEN)
-                        .right(tabled::settings::Color::FG_GREEN)
-                        .corner_top_left(tabled::settings::Color::FG_GREEN)
-                        .corner_top_right(tabled::settings::Color::FG_GREEN)
-                        .corner_bottom_left(tabled::settings::Color::FG_GREEN)
-                        .corner_bottom_right(tabled::settings::Color::FG_GREEN)
-                )
-                .with(
-                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(0))
-                        .with(tabled::settings::Format::content(|s| s.bright_red().to_string()))
-                )
-                .with(
-                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(1))
-                        .with(tabled::settings::Format::content(|s| s.yellow().to_string()))
-                )
-                .with(
-                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(2))
-                        .with(tabled::settings::Format::content(|s| s.cyan().to_string()))
-                )
-                .with(
-                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(3))
-                        .with(tabled::settings::Format::content(|s| s.bright_blue().to_string()))
-                )
-                .with(
-                    tabled::settings::Modify::new(tabled::settings::object::Columns::single(4))
-                        .with(tabled::settings::Format::content(|s| s.bright_green().to_string()))
-                )
-                .to_string()
-        );
+        for episode in select_all_episodes(db, &show.series_name).await? {
+            entries.push(episode);
+        }
     }
+    println!(
+        "{}",
+        tabled::Table::new(entries)
+            .with(tabled::settings::Style::rounded())
+            .with(
+                tabled::settings::style::BorderColor::default()
+                    .top(tabled::settings::Color::FG_GREEN)
+                    .bottom(tabled::settings::Color::FG_GREEN)
+                    .left(tabled::settings::Color::FG_GREEN)
+                    .right(tabled::settings::Color::FG_GREEN)
+                    .corner_top_left(tabled::settings::Color::FG_GREEN)
+                    .corner_top_right(tabled::settings::Color::FG_GREEN)
+                    .corner_bottom_left(tabled::settings::Color::FG_GREEN)
+                    .corner_bottom_right(tabled::settings::Color::FG_GREEN)
+            )
+            .with(
+                tabled::settings::Modify::new(tabled::settings::object::Columns::single(0)).with(
+                    tabled::settings::Format::content(|s| s.bright_red().to_string())
+                )
+            )
+            .with(
+                tabled::settings::Modify::new(tabled::settings::object::Columns::single(1)).with(
+                    tabled::settings::Format::content(|s| s.yellow().to_string())
+                )
+            )
+            .with(
+                tabled::settings::Modify::new(tabled::settings::object::Columns::single(2))
+                    .with(tabled::settings::Format::content(|s| s.cyan().to_string()))
+            )
+            .with(
+                tabled::settings::Modify::new(tabled::settings::object::Columns::single(3)).with(
+                    tabled::settings::Format::content(|s| s.bright_blue().to_string())
+                )
+            )
+            .with(
+                tabled::settings::Modify::new(tabled::settings::object::Columns::single(4)).with(
+                    tabled::settings::Format::content(|s| s.bright_green().to_string())
+                )
+            )
+            .to_string()
+    );
     Ok(())
 }
