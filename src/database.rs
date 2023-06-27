@@ -10,7 +10,7 @@ pub const URL: &str = "sqlite::memory:";
 
 /// Struct to hold a show name from a sqlx query.
 ///
-/// This is used in conjunction with the [`sqlx::query_as()`] function to get the series names from the database.
+/// This is used in conjunction with the [`sqlx::query_as()`] function to get the series names from the database. Derives [`sqlx::FromRow`] trait in order to capture a series name from the database.
 ///
 /// # Panics
 ///
@@ -29,7 +29,7 @@ pub struct Show {
 
 /// Struct to hold an episode entry from the database.
 ///
-/// This is used in conjunction with the [`sqlx::query_as()`] function to get the episode entries from a database query.
+/// This is used in conjunction with the [`sqlx::query_as()`] function to get the episode entries from a database query. Derives [`sqlx::FromRow`] trait in order to capture an episode entry from the database. Derives [`tabled::Tabled`] so that a vector of [`Episode`] can be easily converted to a table.
 ///
 /// # Panics
 ///

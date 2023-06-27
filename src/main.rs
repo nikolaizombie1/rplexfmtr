@@ -11,14 +11,15 @@
 
 /// Holds the all sqlite database related functions and structs
 pub mod database;
+/// Contains all file system manupulation and display functions and structs as well as command line argument and path parsing.
 pub mod files;
 pub mod validate;
 use clap::Parser;
-use validate::*;
 use colored::*;
 use database::*;
 use files::*;
 use std::{io, println, process::exit};
+use validate::*;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
