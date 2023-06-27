@@ -1,17 +1,24 @@
 #![warn(missing_docs)]
-mod database;
-mod validate;
-mod files;
+#![warn(rustdoc::missing_crate_level_docs)]
+
+//! Quick and easy batch file renaming for Plex® Media Server
+//!
+//! A fast an easy command line utility for renaming files for Plex® Media server to recognize.
+//! This utility only works for for TV Shows
+//!
+//! # Usage
+//! plexfmtr -p \[INPUT_FOLDER\] -o \[OUTPUT_FOLDER\]
+
+/// Holds the all sqlite database related functions and structs
+pub mod database;
+pub mod files;
+pub mod validate;
 use clap::Parser;
-use colored::*;
-use files::*;
 use validate::*;
+use colored::*;
 use database::*;
-use std::{
-    io,
-    println,
-    process::exit,
-};
+use files::*;
+use std::{io, println, process::exit};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
@@ -120,6 +127,9 @@ async fn main() -> anyhow::Result<()> {
         false => exit(0),
     }
 
-    println!("Files renamed succesfully, Located at {}.",args.output_path.to_str().unwrap().green());
+    println!(
+        "Files renamed succesfully, Located at {}.",
+        args.output_path.to_str().unwrap().green()
+    );
     Ok(())
 }
