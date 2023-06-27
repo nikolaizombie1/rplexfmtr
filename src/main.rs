@@ -13,6 +13,7 @@
 pub mod database;
 /// Contains all file system manupulation and display functions and structs as well as command line argument and path parsing.
 pub mod files;
+/// Contains all functions to validate user input
 pub mod validate;
 use clap::Parser;
 use colored::*;

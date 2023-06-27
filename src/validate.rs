@@ -3,6 +3,17 @@ use regex::{Regex, RegexSet};
 use std::path::PathBuf;
 use std::process::exit;
 
+/// Verifies if a given string can be parsed as a Path and is a directory. Exits if the string is not a directory. Returns the inputted string if it is a valid directory.
+///
+/// Function will exit with an exit code of `1` if a given string is either not a directory.
+///
+/// # Panic
+/// - The input string cannot be parsed to a path.
+///
+/// # Example
+/// ```
+/// valid_paths("/home/user/");
+/// ```
 pub fn valid_paths(s: &str) -> anyhow::Result<PathBuf> {
     let path: PathBuf = s.parse()?;
     if !path.is_dir() {
@@ -12,8 +23,35 @@ pub fn valid_paths(s: &str) -> anyhow::Result<PathBuf> {
     Ok(path)
 }
 
+/// Verifies if a given string does not contain neither the substring(s):
+/// - <
+/// - \>
+/// - :
+/// - /
+/// - \\
+/// - |
+/// - ?
+/// - \*
+/// - COM0, COM1 ... COM9
+/// - LPT0, LPT1 ... LPT9
+/// - NUL
+/// - PRN
+/// - AUX
+/// If the given string does not contain any of the aformentioned subtrings, the funtion returns true, else returns false.
+///
+/// This function staticly loaded and compiled regular explessions from the [`regex`] crate using the [`lazy_static!`] macro. The regular expressions are compiled only when the function is called and only compile once.
+///
+/// # Panics
+/// Under normal circumstances the function should not panic but if the regular expessions are modified, it can panic due to either the regular expressions failing to compile or a parse of a string to a usize fails due to a change in the regular expressions.
+///
+/// # Example
+/// ```
+/// let good_name = valid_name("Show");
+/// assert_eq!(good_name,true);
+/// ```
 pub fn valid_name(name: &str) -> bool {
     lazy_static! {
+        #[doc(hidden)]
         static ref REGEXES: RegexSet = RegexSet::new(&[
             r#"[<>:"/\|?*\\]"#,
             r#"COM[0-9]"#,
@@ -36,13 +74,36 @@ pub fn valid_name(name: &str) -> bool {
     }
 }
 
+/// Given a string and the ammount of files in a folder, will return a [`Result<Vec<usize>>`] containing the indexes of the selected files in either:
+/// - A dual ended range. eg.(0-3)
+/// - A left ended range. eg.(0-)
+/// - A right ended range. eg.(-5)
+/// - Comma separeted values. eg.(1,2,3)
+/// - Single Values. eg.(1 2 3)
+///
+/// The input string, if it has multiple ranges, need to be space separated. The ammount_files needs to be the length of the vector of the files of which the user has selected.
+///
+/// # Panics
+/// Under normal circumstances the function should not panic but if the regular expessions are modified, it can panic due to either the regular expressions failing to compile or a parse of a string to a usize fails due to a change in the regular expressions.
+///
+/// # Example
+/// ```
+/// let result = parse_range(6,"0 1-2 3,4 5")
+/// assert_eq!(result, vec![0,1,2,3,4,5]);
+/// ```
 pub fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<usize>> {
     let mut file_numbers: Vec<usize> = Vec::new();
+        #[doc(hidden)]
     lazy_static! {
+        #[doc(hidden)]
         static ref DUALENDEDRANGE: Regex = Regex::new(r#"^\d+-\d+$"#).unwrap();
+        #[doc(hidden)]
         static ref LEFTENDEDRANGE: Regex = Regex::new(r#"^\d+-$"#).unwrap();
+        #[doc(hidden)]
         static ref RIGHTENDEDRANGE: Regex = Regex::new(r#"^+-\d$"#).unwrap();
+        #[doc(hidden)]
         static ref CSV: Regex = Regex::new(r#"^(\d+,)+\d$"#).unwrap();
+        #[doc(hidden)]
         static ref SINGLE: Regex = Regex::new(r#"^\d$"#).unwrap();
     }
     let ranges = range
