@@ -48,7 +48,7 @@ Once here we can choose which files we would like to rename. We can input a rang
 After pressing enter, we are asked what season number do these files belong to.
 ![Entering a season](README/Entering%20a%20season.png)  
 
-If there are more input directories given, we will be prompted give a name, chose the files and give a season for all input directories.\ 
+If there are more input directories given, we will be prompted give a name, chose the files and give a season for all input directories.
 
 Once all input directories have been processed, we are prompted to preview the changes that we are going to make to the files. If we type `y`, a table is presented showing the changes that we inputted.
 ![Preview Changes](README/Preview%20Changes.png)
