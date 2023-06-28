@@ -8,7 +8,7 @@ description = "A command line tool to batch rename media files for Plex® Media 
 readme = "README.md"
 homepage = "https://github.com/nikolaizombie1/rplexfmtr"
 repository = "https://github.com/nikolaizombie1/rplexfmtr"
-keywords = ["cli","rename","batch","Plex","Plex Media Server"]
+keywords = ["cli","rename","batch","Plex"]
 categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
