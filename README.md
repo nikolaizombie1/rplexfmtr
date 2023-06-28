@@ -13,6 +13,12 @@ Where input_folders(s) is the folder containing the media to be renamed. You can
 The output folder is a single output directory where the the series will be moved to. \
 **NOTE:** The output directory will serve as the root of the output folder structure for the individual series entries. For example: if you input a show called `Bob` whose episodes belong to `season 1` with the output directory being `~/`. The episodes will be located in `~/Downloads/Bob/Season 1/`.
 
+## Install 
+You can install rplexfmtr via cargo using the following command:
+```bash
+cargo install rplexfmtr
+```
+
 ## Step-by-step Example
 
 ![Command Invocation Example](README/Command%20Invocation.png)
@@ -50,3 +56,18 @@ Once all input directories have been processed, we are prompted to preview the c
 Finally, we are asked if we are happy with these changes and if we would like to execute these changes by typing `y` and then pressing enter. 
 
 Once the renaming process is complete, rplexfmtr will remind us where the files where all the folders are located.
+
+## Building from source
+First clone the master branch of the github repo:
+```bash
+git clone "https://github.com/nikolaizombie1/rplexfmtr.git"
+```
+Then enter the rplexfmtr directory:
+```bash
+cd rxplexfmtr
+```
+Then, compile the binary:
+```bash
+cargo build --release
+```
+The standalone binary will be located in `target/release/rplexfmtr`
