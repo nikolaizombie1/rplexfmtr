@@ -72,3 +72,17 @@ Then, compile the binary:
 cargo build --release
 ```
 The standalone binary will be located in `target/release/rplexfmtr`
+
+## Viewing Documentation
+To view the documentation for this binary crate you first need to download the git repository:
+```bash
+git clone "https://github.com/nikolaizombie1/rplexfmtr.git"
+```
+Then enter the rplexfmtr directory:
+```bash
+cd rxplexfmtr
+```
+Finally, view the documentation with:
+```bash
+cargo doc --open
+```
