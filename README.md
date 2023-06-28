@@ -36,14 +36,14 @@ After pressing enter once again, we will be shown a list of the files within the
 
 ![Display Directory Files](README/Display%20directory%20files.png) \
 Once here we can choose which files we would like to rename. We can input a range in the prompt in the any of the following formats:
-- Dual ended range. For example, `0-2` will choose files `0,1,2` within from the files presented above.
-- Left ended range: For example, `1-` will choose files `1,2,3`, within from the files presented above.
--Right ended range: For example, `-2` will choose files `0,1,2`, within from the files presented above.
-- Comma Separated Values: For example, `0,1,3` will chooses files `0,1,3`, within from the files presented above.
-- Space separated values: For example, `2 1 3` will choose files `1,2,3`, within from the files presented above.
-- Whole list: If you press enter without giving a range, all the files will be selected. For example, files `0,1,2,3` will be chosen, within from the files presented above.
+- Dual ended range. For example, `0-2` will choose files `0,1,2` from the files presented above.
+- Left ended range: For example, `1-` will choose files `1,2,3`, from the files presented above.
+- Right ended range: For example, `-2` will choose files `0,1,2`, from the files presented above.
+- Comma Separated Values: For example, `0,1,3` will chooses files `0,1,3`, from the files presented above.
+- Space separated values: For example, `2 1 3` will choose files `1,2,3`, from the files presented above.
+- Whole list: If you press enter without giving a range, all the files will be selected. For example, files `0,1,2,3` will be chosen, from the files presented above.
 ![Entering a Range](README/Entering%20a%20range.png)
-**NOTE:** If a value provided by the user is not in the list, for example `4` in the above example, this number will be discarded.\
+**NOTE:** If a value provided by the user is not in the list, for example `4` in the above example, this number will be discarded.
 
 After pressing enter, we are asked what season number do these files belong to.
 ![Entering a season](README/Entering%20a%20season.png)  
