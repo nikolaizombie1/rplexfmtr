@@ -1,10 +1,10 @@
 [package]
 name = "rplexfmtr"
-version = "1.0.1"
+version = "1.0.2"
 edition = "2021"
 authors = ["nikolaizombie1 <fabio.matos999@gmail.com>"]
 license = "GPL-3.0-only"
-description = "A command line tool to batch rename media files for Plex® Media Server Tv Show."
+description = "A command line tool to batch rename media files for Plex® Media Server TV Show."
 readme = "README.md"
 homepage = "https://github.com/nikolaizombie1/rplexfmtr"
 repository = "https://github.com/nikolaizombie1/rplexfmtr"
