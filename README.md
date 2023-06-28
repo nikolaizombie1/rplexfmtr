@@ -29,7 +29,7 @@ After pressing enter, we are shown the first input directory given and rplexfmtr
 
 ![Name Prompt](README/Name%20Prompt.png)
 
-After, we can input a name as we would be renaming a file. \
+After, we can input a name as we would be renaming a file.
 ![Entering A Name](README/Entering%20a%20name.png)
 
 After pressing enter once again, we will be shown a list of the files within the directory highlighted in green.
