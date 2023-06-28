@@ -1,7 +1,15 @@
 [package]
 name = "rplexfmtr"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+authors = ["nikolaizombie1 <fabio.matos999@gmail.com>"]
+license = "GNU GENERAL PUBLIC LICENSE Version 3"
+description = "A command line tool to batch rename media files for Plex® Media Server Tv Show."
+readme = "README.md"
+homepage = "https://github.com/nikolaizombie1/rplexfmtr"
+repository = "https://github.com/nikolaizombie1/rplexfmtr"
+keywords = ["cli","rename","batch","Plex","Plex Media Server"]
+categories = ["command-line-utilities"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
