@@ -23,7 +23,7 @@ cargo install rplexfmtr
 
 ![Command Invocation Example](README/Command%20Invocation.png)
 
-Here we give the folder(s) containing the files we want to rename using the -p flag and specify where we want to move the files using the -o flag. \
+Here we give the folder(s) containing the files we want to rename using the -p flag and specify where we want to move the files using the -o flag.
 
 After pressing enter, we are shown the first input directory given and rplexfmtr asks us what would you like the files in folder highlighted in green.
 
