@@ -11,7 +11,7 @@
 
 /// Holds the all sqlite database related functions and structs
 pub mod database;
-/// Contains all file system manupulation and display functions and structs as well as command line argument and path parsing.
+/// Contains all file system manipulation and display functions and structs as well as command line argument and path parsing.
 pub mod files;
 /// Contains all functions to validate user input
 pub mod validate;
@@ -27,13 +27,13 @@ use validate::*;
 /// First, the main function  initialized the transient, in memory, database using [`database::setup_database()`].
 /// Then parses and verifies command line arguments using [`clap`] and [`validate::valid_paths()`].\
 ///
-/// Then iterates through the input paths and prompts the user for what series name would theey like the files to correspond to.
-/// If the user imputs an invalid name, it will prompt the user again to enter a name until a valid name is given.\
+/// Then iterates through the input paths and prompts the user for what series name would they like the files to correspond to.
+/// If the user inputs an invalid name, it will prompt the user again to enter a name until a valid name is given.\
 ///
 /// Once a valid name is provided, the user is prompted to choose which files they would like to be renamed.
 /// Once again, if the user provides an invalid input, they will be prompted to input a season number again unit a valid input is provided.\
 ///
-/// Then, the validated set of files will be inputed to the database.
+/// Then, the validated set of files will be inputted to the database.
 /// If more than one input directory was provided, the user will be prompted to input the information for that set of files, repeating the process.\
 ///
 /// Once all input directories have been processed, the user will be prompted to preview the changes.
@@ -42,7 +42,7 @@ use validate::*;
 ///
 /// Finally, the user will be prompted if they would like to execute the changes.
 /// If the user inputs 'y', the renaming process will commence and the files will be renamed and moved to the output directory following the Plex® Media Server folder structure.
-/// If all files are renamed succesfully, the user will be shown that the files have been moved succesfully and show the the location of the renamed files.
+/// If all files are renamed successfully, the user will be shown that the files have been moved successfully and show the the location of the renamed files.
 #[tokio::main]
 pub async fn main() -> anyhow::Result<()> {
     let db = setup_database(URL).await?;
@@ -51,7 +51,7 @@ pub async fn main() -> anyhow::Result<()> {
         let name: String;
         loop {
             println!(
-                "What would you like the entries for {} to be tittled?: ",
+                "What would you like the entries for {} to be titled?: ",
                 path.to_str().unwrap().green()
             );
             let mut ans = String::new();
@@ -151,7 +151,7 @@ pub async fn main() -> anyhow::Result<()> {
     }
 
     println!(
-        "Files renamed succesfully, Located at {}.",
+        "Files renamed successfully, Located at {}.",
         args.output_path.to_str().unwrap().green()
     );
     Ok(())

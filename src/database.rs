@@ -14,7 +14,7 @@ pub const URL: &str = "sqlite::memory:";
 ///
 /// # Panics
 ///
-/// The sqlx::query_as function will panic if the selected columns from the table do not match the type and ammount and name of fields being seleted by the query.
+/// The sqlx::query_as function will panic if the selected columns from the table do not match the type and amount and name of fields being selected by the query.
 ///
 /// # Examples
 /// ```
@@ -33,7 +33,7 @@ pub struct Show {
 ///
 /// # Panics
 ///
-/// The sqlx::query_as function will panic if the selected collumns from the table do not match the type and ammount and name of fields being seleted by the query.
+/// The sqlx::query_as function will panic if the selected columns from the table do not match the type and amount and name of fields being selected by the query.
 ///
 /// # Examples
 /// ```
