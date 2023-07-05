@@ -12,7 +12,7 @@ plexfmtr -i [input_folder(s)] -o [output_folder]
 Where input_folders(s) is the folder containing the media to be renamed. You can input multiple media folders as a space separated list.
 The output folder is a single output directory where the the series will be moved to.
 
-**NOTE:** The output directory will serve as the root of the output folder structure for the individual series entries. For example: if you input a show called `Bob` whose episodes belong to `season 1` with the output directory being `~/`. The episodes will be located in `~/Downloads/Bob/Season 1/`.
+**NOTE:** The output directory will serve as the root of the output folder structure for the individual series entries. For example: if you input a show called `Bob` whose episodes belong to `season 1` with the output directory being `~/Downloads`. The episodes will be located in `~/Downloads/Bob/Season 1/`.
 
 ## Install 
 You can install rplexfmtr via cargo using the following command:
