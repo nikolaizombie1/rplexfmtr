@@ -28,7 +28,7 @@ use std::path::PathBuf;
 #[command(author, version, about)]
 pub struct Cli {
     /// Input path(s) of video folder(s)
-    #[arg(short, long, value_parser = valid_paths, num_args = 1.. )]
+    #[arg(short, long, value_parser = valid_paths, num_args = 1.. , required = true )]
     pub input_paths: Vec<PathBuf>,
 
     /// Output Folder for Plex formatted media

@@ -7,7 +7,7 @@
 //! This utility only works for for TV Shows
 //!
 //! # Usage
-//! plexfmtr -p \[input_folder(s)\] -o \[output_folder\]
+//! plexfmtr -i \[input_folder(s)\] -o \[output_folder\]
 
 /// Holds the all sqlite database related functions and structs
 pub mod database;
@@ -105,7 +105,7 @@ pub async fn main() -> anyhow::Result<()> {
                 &name,
                 season,
                 (index as u32) + 1,
-                std::fs::canonicalize(file.path())?,
+                file.path(),
                 args.output_path
                     .to_owned()
                     .join(&name)
