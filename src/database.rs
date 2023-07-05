@@ -161,7 +161,7 @@ pub async fn select_all_episodes(
     series_name: &str,
 ) -> anyhow::Result<Vec<Episode>> {
     Ok(sqlx::query_as::<_, Episode>(
-        "SELECT DISTINCT series_name, season, episode, old_path, new_path FROM episodes WHERE series_name = ? ORDER BY LENGTH(series_name), series_name, LENGTH(season), season, LENGTH(old_path), old_path;",
+        "SELECT DISTINCT series_name, season, episode, old_path, new_path FROM episodes WHERE series_name = ? GROUP BY series_name, season, episode ORDER BY LENGTH(series_name), series_name;",
     )
     .bind(series_name)
     .fetch_all(db)

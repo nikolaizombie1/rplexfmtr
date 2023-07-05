@@ -89,9 +89,9 @@ pub fn parse_range(amount_files: usize, range: String) -> anyhow::Result<Vec<usi
     let mut file_numbers: Vec<usize> = Vec::new();
     let dualendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d+-\d+$"#).unwrap());
     let leftendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d+-$"#).unwrap());
-    let rightendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^+-\d$"#).unwrap());
-    let csv: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^(\d+,)+\d$"#).unwrap());
-    let single: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d$"#).unwrap());
+    let rightendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^-\d+$"#).unwrap());
+    let csv: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^(\d+,)+\d+$"#).unwrap());
+    let single: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d+$"#).unwrap());
     let ranges = range
         .split_ascii_whitespace()
         .map(|x| x.to_owned())

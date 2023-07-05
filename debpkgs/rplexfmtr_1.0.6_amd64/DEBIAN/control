@@ -1,0 +1,8 @@
+Package: rplexfmtr
+Version: 1.0.6
+Architecture: amd64
+Essential: no
+Priority: optional
+Depends:
+Maintainer: Fabio J. Matos Nieves <fabio.matos999@gmail.com>
+Description: A command line tool to batch rename media files for Plex® Media Server TV Shows.
