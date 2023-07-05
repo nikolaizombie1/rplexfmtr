@@ -19,7 +19,7 @@ You can install rplexfmtr via cargo using the following command:
 ```bash
 cargo install rplexfmtr
 ```
-
+Or by going to our [releases](https://github.com/nikolaizombie1/rplexfmtr/releases/).
 ## Step-by-step Example
 
 ![Command Invocation Example](README/Command%20Invocation.png)
@@ -42,8 +42,8 @@ Once here we can choose which files we would like to rename. We can input a rang
 - Right ended range: For example, `-2` will choose files `0,1,2`, from the files presented above.
 - Comma Separated Values: For example, `0,1,3` will chooses files `0,1,3`.
 - Space separated values: For example, `2 1 3` will choose files `1,2,3`.
-- Whole list: If you press enter without giving a range, all the files will be selected. For example, files `0,1,2,3` will be chosen, from the files presented above.
-![Entering a Range](README/Entering%20a%20range.png)
+- Whole list: If you press enter without giving a range, all the files will be selected. For example, files `0,1,2,3` will be chosen, from the files presented above.\
+![Entering a Range](README/Entering%20a%20range.png)\
 **NOTE:** If a value provided by the user is not in the list, for example `4` in the above example, this number will be discarded.
 
 After pressing enter, we are asked what season number do these files belong to.
