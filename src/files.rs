@@ -45,16 +45,21 @@ pub struct Cli {
 /// - If the file in the old_path of the episode entry no longer has permissions to read the file, the method will panic.
 /// - If the new_path directory no longer has write permissions, this method will panic.
 pub async fn move_files(db: &sqlx::SqlitePool, args: &Cli) -> anyhow::Result<()> {
-    for show in select_all_shows(&db).await? {
-        for episode in select_all_episodes(&db, &show.series_name)
+    for show in select_all_shows(db).await? {
+        for episode in select_all_episodes(db, &show.series_name)
             .await?
             .into_iter()
         {
             std::fs::create_dir_all(args.output_path.join(episode.clone().series_name).join(
-                String::from("Season ".to_owned() + &episode.season.to_string()),
+                "Season ".to_owned() + &episode.season.to_string(),
             ))?;
-            std::fs::copy(episode.clone().old_path, episode.clone().new_path)?;
-            std::fs::remove_file(episode.clone().old_path)?;
+            match std::fs::rename(episode.clone().old_path, episode.clone().new_path) {
+                Ok(_) => {}
+                Err(_) => {
+                    std::fs::copy(episode.clone().old_path, episode.clone().new_path)?;
+                    std::fs::remove_file(episode.clone().old_path)?;
+                }
+            }
         }
     }
     Ok(())
@@ -121,9 +126,9 @@ pub fn print_directory(path: PathBuf) -> anyhow::Result<()> {
 /// # Panics
 /// If the file name cannot be succesfully unwrapped to a [`&str`].
 ///
-pub fn get_file_names(files: &Vec<DirEntry>) -> anyhow::Result<Vec<String>> {
+pub fn get_file_names(files: &[DirEntry]) -> anyhow::Result<Vec<String>> {
     Ok(files
-        .into_iter()
+        .iter()
         .map(|x| x.file_name().to_str().unwrap().to_owned())
         .collect::<Vec<_>>())
 }
@@ -186,7 +191,6 @@ pub async fn preview_changes(db: &sqlx::SqlitePool) -> anyhow::Result<()> {
                     tabled::settings::Format::content(|s| s.bright_green().to_string())
                 )
             )
-            .to_string()
     );
     Ok(())
 }

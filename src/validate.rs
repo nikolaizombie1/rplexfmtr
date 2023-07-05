@@ -1,7 +1,7 @@
+use once_cell::unsync::Lazy;
 use regex::{Regex, RegexSet};
 use std::path::PathBuf;
 use std::process::exit;
-use once_cell::unsync::Lazy;
 
 /// Verifies if a given string can be parsed as a Path and is a directory. Exits if the string is not a directory. Returns the inputted string if it is a valid directory.
 ///
@@ -50,25 +50,22 @@ pub fn valid_paths(s: &str) -> anyhow::Result<PathBuf> {
 /// assert_eq!(good_name,true);
 /// ```
 pub fn valid_name(name: &str) -> bool {
-        let  regexes: Lazy<RegexSet> = Lazy::new(|| RegexSet::new(&[
+    let regexes: Lazy<RegexSet> = Lazy::new(|| {
+        RegexSet::new([
             r#"[<>:"/\|?*\\]"#,
             r#"COM[0-9]"#,
             r#"LPT[0-9]"#,
             r#"NUL"#,
             r#"PRN"#,
-            r#"AUX"#
+            r#"AUX"#,
         ])
-        .unwrap());
-    if name.len() == 0
+        .unwrap()
+    });
+    !(name.is_empty()
         || regexes.is_match(name)
-        || name.contains("\0")
+        || name.contains('\0')
         || name.chars().nth(name.len() - 2).unwrap() == '.'
-        || name.chars().nth(name.len() - 2).unwrap() == ' '
-    {
-        false
-    } else {
-        true
-    }
+        || name.chars().nth(name.len() - 2).unwrap() == ' ')
 }
 
 /// Given a string and the ammount of files in a folder, will return a [`Result<Vec<usize>>`] containing the indexes of the selected files in either:
@@ -90,16 +87,16 @@ pub fn valid_name(name: &str) -> bool {
 /// ```
 pub fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<usize>> {
     let mut file_numbers: Vec<usize> = Vec::new();
-        let dualendedrange: Lazy<Regex> = Lazy::new(||Regex::new(r#"^\d+-\d+$"#).unwrap());
-        let leftendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d+-$"#).unwrap());
-        let rightendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^+-\d$"#).unwrap());
-        let csv: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^(\d+,)+\d$"#).unwrap());
-        let single: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d$"#).unwrap());
+    let dualendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d+-\d+$"#).unwrap());
+    let leftendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d+-$"#).unwrap());
+    let rightendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^+-\d$"#).unwrap());
+    let csv: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^(\d+,)+\d$"#).unwrap());
+    let single: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d$"#).unwrap());
     let ranges = range
         .split_ascii_whitespace()
         .map(|x| x.to_owned())
         .collect::<Vec<_>>();
-    if range == "" {
+    if range.is_empty() {
         for num in 0..ammount_files {
             file_numbers.push(num);
         }
@@ -107,7 +104,7 @@ pub fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<us
         for r in ranges {
             if dualendedrange.is_match(&r) {
                 let nums = r.split('-').collect::<Vec<&str>>();
-                let left: usize = nums.get(0).unwrap().parse()?;
+                let left: usize = nums.first().unwrap().parse()?;
                 let right: usize = nums.get(1).unwrap().parse()?;
                 if left < ammount_files && right < ammount_files && left <= right {
                     for num in left..(right + 1) {
@@ -116,7 +113,7 @@ pub fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<us
                 }
             } else if leftendedrange.is_match(&r) {
                 let nums = r.split('-').collect::<Vec<&str>>();
-                let left: usize = nums.get(0).unwrap().parse()?;
+                let left: usize = nums.first().unwrap().parse()?;
                 if left < ammount_files {
                     for num in left..ammount_files {
                         file_numbers.push(num);

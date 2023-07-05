@@ -109,8 +109,8 @@ pub async fn main() -> anyhow::Result<()> {
                 args.output_path
                     .to_owned()
                     .join(&name)
-                    .join(String::from("Season ".to_owned() + &season.to_string()))
-                    .join(String::from(
+                    .join("Season ".to_owned() + &season.to_string())
+                    .join(
                         name.clone()
                             + " S"
                             + &season.to_string()
@@ -121,11 +121,11 @@ pub async fn main() -> anyhow::Result<()> {
                                 .file_name()
                                 .to_str()
                                 .unwrap()
-                                .split(".")
+                                .split('.')
                                 .collect::<Vec<_>>()
                                 .last()
                                 .unwrap(),
-                    )),
+                    ),
             )
             .await?;
         }

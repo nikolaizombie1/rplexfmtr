@@ -18,3 +18,5 @@ test2/*
 test3/*
 
 .vscode/*
+*.deb
+debpkgs/*/usr/bin/*
