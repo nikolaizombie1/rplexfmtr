@@ -1,5 +1,6 @@
 #![warn(missing_docs)]
 #![warn(rustdoc::missing_crate_level_docs)]
+#![deny(unsafe_code)]
 
 //! Quick and easy batch file renaming for Plex® Media Server
 //!
