@@ -19,7 +19,7 @@ You can install rplexfmtr via cargo using the following command:
 ```bash
 cargo install rplexfmtr
 ```
-Or by going to our [releases](https://github.com/nikolaizombie1/rplexfmtr/releases/).
+Or by going to our [Github releases](https://github.com/nikolaizombie1/rplexfmtr/releases/).
 ## Step-by-step Example
 
 ![Command Invocation Example](README/Command%20Invocation.png)
