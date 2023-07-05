@@ -47,7 +47,7 @@ use validate::*;
 pub async fn main() -> anyhow::Result<()> {
     let db = setup_database(URL).await?;
     let args = Cli::parse();
-    for path in &args.path {
+    for path in &args.input_paths {
         let name: String;
         loop {
             println!(

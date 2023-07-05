@@ -37,12 +37,12 @@ pub fn valid_paths(s: &str) -> anyhow::Result<PathBuf> {
 /// - NUL
 /// - PRN
 /// - AUX
-/// If the given string does not contain any of the aformentioned subtrings, the funtion returns true, else returns false.
+/// If the given string does not contain any of the aforementioned substrings, the function returns true, else returns false.
 ///
-/// This function staticly loaded and compiled regular explessions from the [`regex`] crate using the [`once_cell::unsync::Lazy::new()`] function. The regular expressions are compiled only when the function is called and only compile once.
+/// This function statically loaded and compiled regular expressions from the [`regex`] crate using the [`once_cell::unsync::Lazy::new()`] function. The regular expressions are compiled only when the function is called and only compile once.
 ///
 /// # Panics
-/// Under normal circumstances the function should not panic but if the regular expessions are modified, it can panic due to either the regular expressions failing to compile or a parse of a string to a usize fails due to a change in the regular expressions.
+/// Under normal circumstances the function should not panic but if the regular expressions are modified, it can panic due to either the regular expressions failing to compile or a parse of a string to a usize fails due to a change in the regular expressions.
 ///
 /// # Example
 /// ```
@@ -68,24 +68,24 @@ pub fn valid_name(name: &str) -> bool {
         || name.chars().nth(name.len() - 2).unwrap() == ' ')
 }
 
-/// Given a string and the ammount of files in a folder, will return a [`Result<Vec<usize>>`] containing the indexes of the selected files in either:
+/// Given a string and the amount of files in a folder, will return a [`Result<Vec<usize>>`] containing the indexes of the selected files in either:
 /// - A dual ended range. eg.(0-3)
 /// - A left ended range. eg.(0-)
 /// - A right ended range. eg.(-5)
-/// - Comma separeted values. eg.(1,2,3)
+/// - Comma separated values. eg.(1,2,3)
 /// - Single Values. eg.(1 2 3)
 ///
-/// The input string, if it has multiple ranges, need to be space separated. The ammount_files needs to be the length of the vector of the files of which the user has selected.
+/// The input string, if it has multiple ranges, need to be space separated. The amount_files needs to be the length of the vector of the files of which the user has selected.
 ///
 /// # Panics
-/// Under normal circumstances the function should not panic but if the regular expessions are modified, it can panic due to either the regular expressions failing to compile or a parse of a string to a usize fails due to a change in the regular expressions.
+/// Under normal circumstances the function should not panic but if the regular expressions are modified, it can panic due to either the regular expressions failing to compile or a parse of a string to a usize fails due to a change in the regular expressions.
 ///
 /// # Example
 /// ```
 /// let result = parse_range(6,"0 1-2 3,4 5")
 /// assert_eq!(result, vec![0,1,2,3,4,5]);
 /// ```
-pub fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<usize>> {
+pub fn parse_range(amount_files: usize, range: String) -> anyhow::Result<Vec<usize>> {
     let mut file_numbers: Vec<usize> = Vec::new();
     let dualendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d+-\d+$"#).unwrap());
     let leftendedrange: Lazy<Regex> = Lazy::new(|| Regex::new(r#"^\d+-$"#).unwrap());
@@ -97,7 +97,7 @@ pub fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<us
         .map(|x| x.to_owned())
         .collect::<Vec<_>>();
     if range.is_empty() {
-        for num in 0..ammount_files {
+        for num in 0..amount_files {
             file_numbers.push(num);
         }
     } else {
@@ -106,7 +106,7 @@ pub fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<us
                 let nums = r.split('-').collect::<Vec<&str>>();
                 let left: usize = nums.first().unwrap().parse()?;
                 let right: usize = nums.get(1).unwrap().parse()?;
-                if left < ammount_files && right < ammount_files && left <= right {
+                if left < amount_files && right < amount_files && left <= right {
                     for num in left..(right + 1) {
                         file_numbers.push(num);
                     }
@@ -114,15 +114,15 @@ pub fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<us
             } else if leftendedrange.is_match(&r) {
                 let nums = r.split('-').collect::<Vec<&str>>();
                 let left: usize = nums.first().unwrap().parse()?;
-                if left < ammount_files {
-                    for num in left..ammount_files {
+                if left < amount_files {
+                    for num in left..amount_files {
                         file_numbers.push(num);
                     }
                 }
             } else if rightendedrange.is_match(&r) {
                 let nums = r.split('-').collect::<Vec<&str>>();
                 let right: usize = nums.get(1).unwrap().parse()?;
-                if right < ammount_files {
+                if right < amount_files {
                     for num in 0..(right + 1) {
                         file_numbers.push(num);
                     }
@@ -135,13 +135,13 @@ pub fn parse_range(ammount_files: usize, range: String) -> anyhow::Result<Vec<us
                     .map(|x| x.parse().unwrap())
                     .collect::<Vec<usize>>();
                 for num in nums {
-                    if num < ammount_files {
+                    if num < amount_files {
                         file_numbers.push(num);
                     }
                 }
             } else if single.is_match(&r) {
                 let num: usize = r.parse().unwrap();
-                if num < ammount_files {
+                if num < amount_files {
                     file_numbers.push(num);
                 }
             }

@@ -27,18 +27,18 @@ use std::path::PathBuf;
 #[derive(Parser)]
 #[command(author, version, about)]
 pub struct Cli {
-    /// Input path of video folder(s)
+    /// Input path(s) of video folder(s)
     #[arg(short, long, value_parser = valid_paths, num_args = 1.. )]
-    pub path: Vec<PathBuf>,
+    pub input_paths: Vec<PathBuf>,
 
     /// Output Folder for Plex formatted media
     #[arg(short,long,value_parser = valid_paths, num_args = 1) ]
     pub output_path: PathBuf,
 }
 
-/// Will move all files from a databse to the output_path given by the command line.
+/// Will move all files from a database to the output_path given by the command line.
 ///
-/// This function will first collect all of the episode entries from the database, create the folder structure for the particular show and season and move the episode to the new_path directory of the given episode.
+/// This function will first collect all of the episode entries from the database, create the folder structure for the particular show and season and move the episode to the new_path directory of the given episode. Will run a filesystem rename if the old_path and new_path directories are in the same file system, else will copy the file to new_path and delete file at old_path.
 ///
 /// # Panics
 /// - If the file in the old_path of the episode entry no longer exists the method will panic.
@@ -65,7 +65,7 @@ pub async fn move_files(db: &sqlx::SqlitePool, args: &Cli) -> anyhow::Result<()>
     Ok(())
 }
 
-/// Given a valid path, will return a [`Result<Vec<std::fs::DirEntry>>`] that are baturally sorted.
+/// Given a valid path, will return a [`Result<Vec<std::fs::DirEntry>>`] that are naturally sorted.
 ///
 /// This function first collects the [`Result<std::fs::DirEntry>`] into a vector, later filters that vector so that it now only contains Ok [`std::fs::DirEntry`].
 /// Then flattens the Ok entries into a [`Vec<std::fs::DirEntry>`], but this vector may contain folders, which isn't valid.
@@ -124,7 +124,7 @@ pub fn print_directory(path: PathBuf) -> anyhow::Result<()> {
 /// This function first converts the given vector to an iterator to which  maps the DirEntry to a file name that is a owned string and then collects it into a Vector of [`String`] if the file name can be unwraped to an [`&str`].
 ///
 /// # Panics
-/// If the file name cannot be succesfully unwrapped to a [`&str`].
+/// If the file name cannot be successfully unwrapped to a [`&str`].
 ///
 pub fn get_file_names(files: &[DirEntry]) -> anyhow::Result<Vec<String>> {
     Ok(files
@@ -142,7 +142,7 @@ pub fn get_file_names(files: &[DirEntry]) -> anyhow::Result<Vec<String>> {
 /// - old_path = Blue.
 /// - new_path = Green.
 ///
-/// First the episodes are all retreived from the database and pushes the episode entries to a vector.
+/// First the episodes are all retrieved from the database and pushes the episode entries to a vector.
 /// Then the vector is turned into table using [`tabled::Table::new()`] function with the style mentioned above.
 pub async fn preview_changes(db: &sqlx::SqlitePool) -> anyhow::Result<()> {
     clearscreen::clear()?;
