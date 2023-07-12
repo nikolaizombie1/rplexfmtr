@@ -45,23 +45,22 @@ pub struct Cli {
 /// - If the file in the old_path of the episode entry no longer has permissions to read the file, the method will panic.
 /// - If the new_path directory no longer has write permissions, this method will panic.
 pub async fn move_files(db: &sqlx::SqlitePool, args: &Cli) -> anyhow::Result<()> {
-    for show in select_all_shows(db).await? {
-        for episode in select_all_episodes(db, &show.series_name)
-            .await?
+        for entry in select!(db)
             .into_iter()
         {
-            std::fs::create_dir_all(args.output_path.join(episode.clone().series_name).join(
-                "Season ".to_owned() + &episode.season.to_string(),
-            ))?;
-            match std::fs::rename(episode.clone().old_path, episode.clone().new_path) {
+            std::fs::create_dir_all(
+                args.output_path
+                    .join(entry.clone().series_name)
+                    .join("Season ".to_owned() + &entry.season.to_string()),
+            )?;
+            match std::fs::rename(entry.clone().old_path, entry.clone().new_path) {
                 Ok(_) => {}
                 Err(_) => {
-                    std::fs::copy(episode.clone().old_path, episode.clone().new_path)?;
-                    std::fs::remove_file(episode.clone().old_path)?;
+                    std::fs::copy(entry.clone().old_path, entry.clone().new_path)?;
+                    std::fs::remove_file(entry.clone().old_path)?;
                 }
             }
         }
-    }
     Ok(())
 }
 
@@ -146,12 +145,7 @@ pub fn get_file_names(files: &[DirEntry]) -> anyhow::Result<Vec<String>> {
 /// Then the vector is turned into table using [`tabled::Table::new()`] function with the style mentioned above.
 pub async fn preview_changes(db: &sqlx::SqlitePool) -> anyhow::Result<()> {
     clearscreen::clear()?;
-    let mut entries: Vec<Episode> = Vec::new();
-    for show in select_all_shows(db).await? {
-        for episode in select_all_episodes(db, &show.series_name).await? {
-            entries.push(episode);
-        }
-    }
+    let entries = select!(db);
     println!(
         "{}",
         tabled::Table::new(entries)

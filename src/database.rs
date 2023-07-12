@@ -3,6 +3,22 @@ use tabled::Tabled;
 
 use sqlx::{migrate::MigrateDatabase, sqlite::SqliteQueryResult, FromRow, Sqlite, SqlitePool};
 
+#[macro_export]
+macro_rules! select {
+    ($db:expr, $show:expr) => {
+        select_all_episodes($db, $show).await?
+    };
+    ($db:expr) => {{
+        let mut entries: Vec<Episode> = Vec::new();
+        for show in select_all_shows($db).await? {
+            for episode in select!($db, &show.series_name) {
+                entries.push(episode);
+            }
+        }
+        entries
+    }};
+}
+
 /// URL for sqlite database.
 ///
 /// Uses a transient in memory database to track the episode entries.
